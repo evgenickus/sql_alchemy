@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from . import models
 from . import schemas
 
@@ -7,7 +7,6 @@ from . import schemas
 # users
 def get_users(db: Session):
   users = select(models.User)
-  # print("------------",db.scalar(users).username)
   return db.scalars(users).all()
 
 def get_user_by_username(db: Session, username: str):
@@ -28,12 +27,40 @@ def create_user(db: Session, user: schemas.UserCreate):
 
 #articles
 def get_articles(db: Session):
-  articles = select(models.Article.content, models.Article.title, models.User.username).join(models.User)
+  articles = select(models.Article.title, models.Article.content, models.User.username).join(models.User)
+  return db.execute(articles).all()
+
+def select_article_by_user_id(db: Session, user_id: int):
+  articles = select(
+    models.Article.title,
+    models.Article.content,
+    models.User.username
+    ).join(models.User).where(models.Article.user_id == user_id)
   return db.execute(articles).all()
 
 def get_article_by_title(db: Session, title: str):
   article = select(models.Article).where(models.Article.title == title)
   return db.scalar(article)
+
+def search_article_like_title(db: Session, title: str):
+  article = select(
+    models.Article.content,
+    models.Article.title,
+    models.User.username
+  ).join(models.User).where(models.Article.title.contains(title.lower()))
+  return db.execute(article).all()
+
+# def search_article_like_title(db: Session, title: str):
+#   articles_list = db.scalars(select(models.Article.title)).all()
+#   lower_case = [item.lower() for item in articles_list]
+  
+#   article = select(
+#     models.Article.content,
+#     models.Article.title,
+#     models.User.username
+#   ).join(models.User).where(models.Article.title.contains(title.lower()))
+#   return db.execute(article).all()
+
 
 def create_article(db: Session, article: schemas.ArticleCreate, username: str):
   new_article = models.Article(title=article.title, content=article.content, user_id=article.user_id)

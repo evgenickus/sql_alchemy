@@ -8,7 +8,7 @@ from .dependencies import get_db
 router = APIRouter()
 
 @router.get("/{username}", response_model=schemas.UserBase)
-def read_user_by_username(username: str, db: Session = Depends(get_db)):
+def search_user_by_username(username: str, db: Session = Depends(get_db)):
   user = crud.get_user_by_username(db, username)
   if not user:
     raise HTTPException(status_code=404, detail="User not found")
