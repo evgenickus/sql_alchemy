@@ -1,10 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List
+from fastapi import FastAPI
 from . import database
-from . import schemas
-from . import crud
-from .routers import users, articles
+from .routers import users, articles, auth
 
 app = FastAPI()
 
@@ -15,6 +11,7 @@ def get_db():
   finally:
     db.close
 
+app.include_router(auth.router, prefix="/token", tags=["authentincate"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(articles.router, prefix="/articles", tags=["articles"])
 

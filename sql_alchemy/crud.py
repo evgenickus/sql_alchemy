@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update, func
+from sqlalchemy import select, update, delete, func
 from . import models
 from . import schemas
+from .routers.auth import get_password_hash
 
 
 # users
@@ -13,13 +14,18 @@ def get_user_by_username(db: Session, username: str):
   user = select(models.User).where(models.User.username == username)
   return db.scalar(user)
 
+def get_user_by_user_id(db: Session, user_id: str):
+  user = select(models.User).where(models.User.id == user_id)
+  return db.scalar(user)
+
 
 def get_user_by_email(db: Session, email: str):
   user = select(models.User).where(models.User.email == email)
   return db.scalar(user)
 
 def create_user(db: Session, user: schemas.UserCreate):
-  hashed_password = user.password + "hashedpassword"
+  # hashed_password = user.password + "hashedpassword"
+  hashed_password = get_password_hash(user.password)
   new_user = models.User(username=user.username, email=user.email, hashed_password=hashed_password)
   db.add(new_user)
   db.commit()
@@ -77,6 +83,8 @@ def edit_article(db: Session, article: schemas.ArticleBase, user_id: int, articl
   updated_article = schemas.ArticleBase(title=article.title, content=article.content, username=article.username)
   return updated_article
 
-
-
+def delete_article(db: Session, article_id: int):
+  article = delete(models.Article).where(models.Article.id == article_id)
+  db.execute(article)
+  db.commit()
 
