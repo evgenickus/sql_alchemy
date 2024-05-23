@@ -7,6 +7,7 @@ from .. import crud, schemas
 from typing import Union
 from datetime import datetime, timedelta, timezone
 
+
 router = APIRouter()
 
 SECRET_KEY = "2c4404d4c97419990d6c9f47719f50e487ef04e13f202f646460e2ccea2db1a"
@@ -61,11 +62,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     token_data = schemas.TokenData(user_id=user_id)
   except jwt.exceptions.InvalidTokenError:
     raise credentials_exception
-
   user = crud.get_user_by_user_id(db, user_id=token_data.user_id)
   if user is None:
     raise credentials_exception
-  print(user)
   return user
 
 @router.post("/")

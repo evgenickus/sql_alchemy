@@ -36,6 +36,10 @@ def get_articles(db: Session):
   articles = select(models.Article.title, models.Article.content, models.User.username).join(models.User)
   return db.execute(articles).all()
 
+def get_titles(db: Session):
+  titles = select(models.Article.title)
+  return db.execute(titles).all()
+
 def select_article_by_user_id(db: Session, user_id: int):
   articles = select(
     models.Article.title,
@@ -75,16 +79,25 @@ def create_article(db: Session, article: schemas.ArticleCreate, username: str):
   return schemas.ArticleBase(title=new_article.title, content=article.content, username=username)
 
 def edit_article(db: Session, article: schemas.ArticleBase, user_id: int, article_id: int):
-  stmt = update(models.Article).where(
-    models.Article.id == article_id).values(
-      title=article.title, content=article.content, user_id=user_id)
-  db.execute(stmt)
-  db.commit()
-  updated_article = schemas.ArticleBase(title=article.title, content=article.content, username=article.username)
-  return updated_article
+  db_article = select(models.Article).where(models.Article.id == article_id).where(models.Article.user_id == user_id)
+  if db.scalar(db_article) is None:
+    return False
+  else:
+    stmt = update(models.Article).where(
+      models.Article.id == article_id).values(
+        title=article.title, content=article.content, user_id=user_id)
+    db.execute(stmt)
+    db.commit()
+    updated_article = schemas.ArticleBase(title=article.title, content=article.content, username=article.username)
+    return updated_article
 
-def delete_article(db: Session, article_id: int):
-  article = delete(models.Article).where(models.Article.id == article_id)
-  db.execute(article)
-  db.commit()
+def delete_article(db: Session, article_id: int, user_id: int):
+  article = select(models.Article).where(models.Article.id == article_id).where(models.Article.user_id == user_id)
+  if db.scalar(article) is None:
+    return False
+  else:
+    stmt = delete(models.Article).where(models.Article.id == article_id).where(models.Article.user_id == user_id)
+    db.execute(stmt)
+    db.commit()
+  return True
 
